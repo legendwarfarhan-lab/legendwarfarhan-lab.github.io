@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=0.85">
+  <title>Legend War · Minecraft Creator</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <style>
+    :root { --primary: #0a6bff; --bg: #080808; --card-bg: #111; }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; font-size: 14px; }
+
+    body { 
+      font-family: 'Inter', sans-serif; 
+      background: var(--bg); 
+      color: #ccc; 
+      overflow-x: hidden; 
+      min-width: 320px;
+      padding-top: 10px;
+    }
+
+    header { text-align: center; padding: 40px 20px; background: linear-gradient(to bottom, #071428, var(--bg)); }
+    .profile { width: 90px; height: 90px; border-radius: 50%; border: 2px solid var(--primary); margin-bottom: 10px; }
+    header h1 { font-size: 32px; color: #fff; letter-spacing: -1px; }
+    .stats { display: flex; justify-content: center; gap: 10px; margin-top: 10px; }
+    .stat-badge { background: rgba(10, 107, 255, 0.05); border: 1px solid rgba(10, 107, 255, 0.2); padding: 4px 12px; border-radius: 20px; font-size: 12px; color: var(--primary); }
+
+    .controls-container { 
+      max-width: 1200px; 
+      margin: -20px auto 20px; 
+      padding: 10px 20px; 
+      position: sticky;
+      top: 0; 
+      z-index: 2000; 
+      background: var(--bg);
+      border-bottom: 1px solid #1a1a1a;
+    }
+    .search-row { display: flex; gap: 10px; margin-bottom: 10px; position: relative; }
+
+    #searchInput { flex: 1; padding: 12px 20px; border-radius: 30px; border: 1px solid #222; background: #161616; color: #fff; outline: none; font-size: 14px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+    #filterIcon { background: #161616; border: 1px solid #222; color: var(--primary); width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+
+    .filter-popup { position: absolute; top: 55px; right: 0; background: #1c1c1c; border: 1px solid #333; border-radius: 8px; width: 180px; display: none; z-index: 3000; box-shadow: 0 15px 30px rgba(0,0,0,0.7); }
+    .filter-popup div { padding: 10px 15px; cursor: pointer; border-bottom: 1px solid #252525; font-size: 13px; }
+    .filter-popup div:hover { background: var(--primary); color: white; }
+
+    .category-filters { 
+      display: flex; 
+      gap: 4px; 
+      justify-content: center; 
+      background: rgba(15, 15, 15, 0.85); 
+      padding: 6px; 
+      border-radius: 40px; 
+      backdrop-filter: blur(10px); 
+      border: 1px solid #222; 
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      max-width: 100%;
+    }
+    .category-filters::-webkit-scrollbar { display: none; }
+    .cat-btn { 
+      background: transparent; 
+      border: 1px solid transparent; 
+      color: #777; 
+      padding: 6px 12px; 
+      border-radius: 20px; 
+      cursor: pointer; 
+      font-weight: 600; 
+      font-size: 12px; 
+      transition: 0.2s; 
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .cat-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+    .grid-section { max-width: 1200px; margin: 0 auto; }
+    .section-title { padding: 0 20px; color: var(--primary); margin-top: 50px; font-size: 22px; font-weight: 700; border-left: 4px solid var(--primary); scroll-margin-top: 150px; }
+    .grid { 
+      display: grid; 
+      grid-template-columns: repeat(2, 1fr); 
+      gap: 15px; 
+      padding: 15px; 
+    }
+    @media (min-width: 640px) {
+      .grid { 
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); 
+        gap: 20px; 
+        padding: 20px; 
+      }
+    }
+
+    .pack { background: var(--card-bg); border-radius: 12px; overflow: hidden; border: 1px solid #222; transition: 0.25s; position: relative; display: flex; flex-direction: column; }
+    .pack:hover { transform: translateY(-5px); border-color: var(--primary); }
+    .pack-badge { position: absolute; top: 10px; right: 10px; padding: 3px 8px; border-radius: 15px; font-size: 9px; font-weight: 900; z-index: 5; }
+    .badge-top { background: #ffd700; color: #000; }
+    .badge-popular { background: #ff4500; color: #fff; }
+    .badge-new { background: #00ffcc; color: #000; }
+    .banner { 
+      aspect-ratio: 2 / 1; 
+      overflow: hidden; 
+      width: 100%;
+    }
+    .banner img { 
+      width: 100%; 
+      height: 100%; 
+      object-fit: cover; 
+      display: block; 
+    }
+
+    .content { padding: 12px; flex: 1; display: flex; flex-direction: column; }
+    @media (min-width: 640px) {
+      .content { padding: 15px; }
+    }
+    .tag { color: var(--primary); font-size: 10px; font-weight: 800; text-transform: uppercase; margin-bottom: 5px; }
+    h3 { font-size: 13px; color: #fff; margin-bottom: 8px; line-height: 1.3; }
+    @media (min-width: 640px) {
+      h3 { font-size: 15px; margin-bottom: 10px; }
+    }
+    .dl-count { color: #555; font-size: 12px; margin-bottom: 15px; }
+    .btn-group { display: flex; gap: 8px; margin-top: auto; }
+    .btn { 
+      flex: 1; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      gap: 4px; 
+      text-decoration: none; 
+      font-weight: 700; 
+      font-size: 10px; 
+      padding: 8px 4px; 
+      border-radius: 6px; 
+      transition: 0.25s ease; 
+      border: 1px solid transparent; 
+    }
+    @media (min-width: 640px) {
+      .btn { 
+        font-size: 12px; 
+        padding: 9px; 
+        gap: 6px;
+      }
+    }
+    .curseforge-btn:hover { 
+      background: transparent; 
+      border-color: #f16436; 
+      color: #f16436; 
+    }
+    .curseforge-btn { 
+      background: #f16436; 
+      color: white; 
+    }
+    .support-btn:hover { 
+      background: transparent; 
+      border-color: #1A73E8; 
+      color: #1A73E8; 
+    }
+    .support-btn { 
+      background: #1A73E8; 
+      color: white; 
+    }
+
+    .footer { background: #050505; border-top: 1px solid #111; padding: 60px 20px 30px; margin-top: 80px; text-align: center; }
+    .footer-container { max-width: 1200px; margin: auto; display: flex; flex-direction: column; align-items: center; gap: 25px; }
+    .footer-brand h3 { color: #fff; font-size: 20px; margin-bottom: 6px; }
+    .footer-brand p { color: #555; font-size: 13px; }
+    .footer-links { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; }
+    .footer-links a { color: #666; text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 8px; transition: 0.3s ease; }
+    .footer-links a i { font-size: 16px; }
+    .footer-links a:hover { color: var(--primary); transform: translateY(-3px); }
+    .footer-bottom { text-align: center; margin-top: 35px; padding-top: 15px; border-top: 1px solid #111; font-size: 12px; color: #333; }
+
+    #topBtn { position: fixed; bottom: 30px; right: 30px; background: var(--primary); color: white; border: none; width: 60px; height: 60px; border-radius: 50%; cursor: pointer; display: none; font-size: 20px; z-index: 5000; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+  </style>
+</head>
+<body>
+
+<header>
+  <img class="profile" src="https://i.postimg.cc/hGq2HTC1/file-000000006bfc71fa8f610e554636abe7.png" alt="Legend War">
+  <h1>Legend War</h1>
+  <div class="stats">
+    <div class="stat-badge"><i class="fa-solid fa-download"></i> 14.1K+ Downloads</div>
+    <div class="stat-badge"><i class="fa-solid fa-box-open"></i> 27 Total Packs</div>
+  </div>
+</header>
+
+<div class="controls-container">
+  <div class="search-row">
+    <input id="searchInput" placeholder="Find a project..." autocomplete="off">
+    <div id="filterIcon"><i class="fa-solid fa-sliders"></i></div>
+    <div id="filterPopup" class="filter-popup">
+      <div data-sort="high-low">Most Downloads</div>
+      <div data-sort="low-high">Least Downloads</div>
+    </div>
+  </div>
+  <div class="category-filters">
+    <button class="cat-btn active" data-filter="all">All</button>
+    <button class="cat-btn" data-filter="New Arrival">New Arrivals</button>
+    <button class="cat-btn" data-filter="Texture Pack">Texture Packs</button>
+    <button class="cat-btn" data-filter="Map">Maps</button>
+    <button class="cat-btn" data-filter="UI Pack">UI Packs</button>
+  </div>
+</div>
+
+<div id="main-catalog">
+  <section class="grid-section" id="top-hits-section">
+    <h2 class="section-title">Top Hits</h2>
+    <div class="grid">
+      <div class="pack" data-name="small and cool golden apple" data-category="Texture Pack" data-downloads="2400">
+        <div class="pack-badge badge-top">TOP</div>
+        <div class="banner"><img src="https://i.postimg.cc/FzwyHhpy/Small_And_Cool_Golden_Apple_resized.webp" alt="Pack Banner" loading="lazy" decoding="async"></div>
+        <div class="content">
+          <span class="tag">Texture Pack</span>
+          <h3>Small And Cool Golden Apple</h3>
+          <p class="dl-count">2.6K DLs</p>
+          <div class="btn-group">
+            <a class="btn curseforge-btn" href="https://www.curseforge.com/minecraft-bedrock/texture-packs/small-and-cool-golden-apple" target="_blank"><i class="fa-solid fa-cube"></i> CurseForge</a>
+            <a class="btn support-btn" href="https://link-target.net/3912568/bhnJwaV461W9" target="_blank"><i class="fa-solid fa-link"></i> Linkvertise</a>
+          </div>
+        </div>
+      </div>
+      <div class="pack" data-name="short swords pvp" data-category="Texture Pack" data-downloads="1700">
+        <div class="pack-badge badge-top">TOP</div>
+        <div class="banner"><img src="https://i.postimg.cc/ZnX85JH6/Short_Swords_resized.webp" alt="Pack Banner" loading="lazy" decoding="async"></div>
+        <div class="content">
+          <span class="tag">Texture Pack</span>
+          <h3>Short Swords</h3>
+          <p class="dl-count">1.9K DLs</p>
+          <div class="btn-group">
+            <a class="btn curseforge-btn" href="https://www.curseforge.com/minecraft-bedrock/texture-packs/short-swords-clear-pvp-combat" target="_blank"><i class="fa-solid fa-cube"></i> CurseForge</a>
+            <a class="btn support-btn" href="https://link-target.net/3912568/bdNigsbAgzxd" target="_blank"><i class="fa-solid fa-link"></i> Linkvertise</a>
+          </div>
+        </div>
+      </div>
+      <div class="pack" data-name="lowfire overhaul" data-category="Texture Pack" data-downloads="1400">
+        <div class="pack-badge badge-top">TOP</div>
+        <div class="banner"><img src="https://i.postimg.cc/fy1cRMCk/Low_Fire_Overhaul_resized.webp" alt="Pack Banner" loading="lazy" decoding="async"></div>
+        <div class="content">
+          <span class="tag">Texture Pack</span>
+          <h3>Lowfire Overhaul - Soul & Normal</h3>
+          <p class="dl-count">1.6K DLs</p>
+          <div class="btn-group">
+            <a class="btn curseforge-btn" href="https://www.curseforge.com/minecraft-bedrock/texture-packs/low-fire-soul-fire-normal-fire" target="_blank"><i class="fa-solid fa-cube"></i> CurseForge</a>
+            <a class="btn support-btn" href="https://link-center.net/3912568/sd3kAg8ECniv" target="_blank"><i class="fa-solid fa-link"></i> Linkvertise</a>
+          </div>
+        </div>
+      </div>
+      <div class="pack" data-name="no underwater fog" data-category="Texture Pack" data-downloads="1300">
+        <div class="pack-badge badge-top">TOP</div>
+        <div class="banner"><img src="https://i.postimg.cc/76ptZK7J/No_Underwater_Fog_resized.webp" alt="Pack Banner" loading="lazy" decoding="async"></div>
+        <div class="content">
+          <span class="tag">Texture Pack</span>
+          <h3>No Underwater Fog</h3>
+          <p class="dl-count">1.3K DLs</p>
+          <div class="btn-group">
+            <a class="btn curseforge-btn" href="https://www.curseforge.com/minecraft-bedrock/texture-packs/no-underwater-fog" target="_blank"><i class="fa-solid fa-cube"></i> CurseForge</a>
+            <a class="btn support-btn" href="https://link-center.net/3912568/WA64AogpEC5F" target="_blank"><i class="fa-solid fa-link"></i> Linkvertise</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid-section" id="trending-section">
+    <h2 class="section-title">Trending</h2>
+    <div class="grid">
+      <div class="pack" data-name="bright blue ancient debris" data-category="Texture Pack" data-downloads="358">
+        <div class="pack-badge badge-popular">HOT</div>
+        <div class="banner"><img src="https://i.postimg.cc/ryHCJ9kY/Blue_Ancient_Debris_resized.webp" alt="Pack Banner" loading="lazy" decoding="async"></div>
+        <div class="content">
+          <span class="tag">Texture Pack</span>
+          <h3>Bright Blue Ancient Debris</h3>
+          <p class="dl-count">0.4k DLs</p>
+          <div class="btn-group">
+            <a class="btn curseforge-btn" href="https://www.curseforge.com/minecraft-bedrock/texture-packs/bright-blue-ancient-debris" target="_blank"><i class="fa-solid fa-cube"></i> CurseForge</a>
+            <a class="btn support-btn" href="https://direct-link.net/3912568/4kEqZtsJcJqQ" target="_blank"><i class="fa-solid fa-link"></i> Linkvertise</a>
+          </div>
+        </div>
+      </div>
+      <div class="pack" data-name="no pumpkin blur" data-category="Texture Pack" data-downloads="421">
+        <div class="pack-badge badge-popular">HOT</div>
+        <div class="banner"><img src="https://i.postimg.cc/NFZ6jQDy/No_Pumpkin_Overlay_resized.webp" alt="Pack Banner" loading="lazy" decoding="async"></div>
+        <div class="content">
+          <span class="tag">Texture Pack</span>
+          <h3>No Pumpkin Blur</h3>
+          <p class="dl-count">0.4k DLs</p>
+          <div class="btn-group">
+            <a class="btn curseforge-btn" href="https://www.curseforge.com/minecraft-bedrock/texture-packs/no-pumpkin-blur-clear-pvp-vision-bedrock" target="_blank"><i class="fa-solid fa-cube"></i> CurseForge</a>
+            <a class="btn support-btn" href="https://link-target.net/3912568/2ij9jyBMd6gt" target="_blank"><i class="fa-solid fa-link"></i> Linkvertise</a>
+          </div>
+        </div>
+      </div>
+      <div class="pack" data-name="no lava fog" data-category="Texture Pack" data-downloads="324">
+        <div class="pack-badge badge-popular">HOT</div>
+        <div class="banner"><img src="https://i.postimg.cc/ZR9DmG9p/No_Lava_Fog_resized.webp" alt="Pack Banner" loading="lazy" decoding="async"></div>
+        <div class="content">
+          <span class="tag">Texture Pack</span>
+          <h3>No Lava Fog</h3>
+          <p class="dl-count">0.3k DLs</p>
+          <div class="btn-group">
+            <a class="btn curseforge-btn" href="https://www.curseforge.com/minecraft-bedrock/texture-packs/no-lava-fog" target="_blank"><i class="fa-solid fa-cube"></i> CurseForge</a>
+            <a class="btn support-btn" href="https://direct-link.net/3912568/NCc7tFKFZuov" target="_blank"><i class="fa-solid fa-link"></i> Linkvertise</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid-section" id="new-arrivals-section">
+    <h2 class="section-title">New Arrivals</h2>
+    <div class="grid">
+      <div class="pack" data-name="30+ crosshairs" data-category="UI Pack" data-downloads="136">
+        <div class="pack-badge badge-new">NEW</div>
+        <div class="banner"><img src="https://i.postimg.cc/C1rhD1Wz/30_Custom_Crosshairs_resized.webp" alt="Pack Banner" loading="lazy" decoding="async"></div>
+        <div class="content">
+          <span class="tag">UI Pack</span>
+          <h3>30+ Crosshairs</h3>
+          <p class="dl-count">0.1k DLs</p>
+          <div class="btn-group">
+            <a class="btn curseforge-btn" href="https://www.curseforge.com/minecraft-bedrock/texture-packs/custom-crosshairs" target="_blank"><i class="fa-solid fa-cube"></i> CurseForge</a>
+            <a class="btn support-btn" href="https://link-center.net/3912568/pr5kO3tuQmdo" target="_blank"><i class="fa-solid fa-link"></i> Linkvertise</a>
+          </div>
+        </div>
+      </div>
+      <div class="pack" data-name="full grass overhaul" data-category="Texture Pack" data-downloads="58">
+        <div class="pack-badge badge-new">NEW</div>
+        <div class="banner"><img src="https://i.postimg.cc/C59Gxw7K/Full_Grass_Overhaul_resized.webp" alt="Pack Banner" loading="lazy" decoding="async"></div>
+        <div class="content">
+          <span class="tag">Texture Pack</span>
+          <h3>Full Grass Overhaul</h3>
+          <p class="dl-count">0.1k DLs</p>
+          <div class="btn-group">
+            <a class="btn curseforge-btn" href="https://www.curseforge.com/minecraft-bedrock/texture-packs/full-grass-overhaul" target="_blank"><i class="fa-solid fa-cube"></i> CurseForge</a>
+            <a class="btn support-btn" href="https://link-center.net/3912568/8UwJuPHRP3fK" target="_blank"><i class="fa-solid fa-link"></i> Linkvertise</a>
+          </div>
+        </div>
+      </div>
+      <div class="pack" data-name="helmets into crowns" data-category="Texture Pack" data-downloads="361">
+        <div class="pack-badge badge-new">NEW</div>
+        <div class="banner"><img src="https://i.postimg.cc/1XbG3yBt/Helmets_Into_Crowns_resized.webp" alt="Pack Banner" loading="lazy" decoding="async"></div>
+        <div class="content">
+          <span class="tag">Texture Pack</span>
+          <h3>Helmets into Crowns</h3>
+          <p class="dl-count">0.4k DLs</p>
+          <div class="btn-group">
+            <a class="btn curseforge-btn" href="https://www.curseforge.com/minecraft-bedrock/texture-packs/helmets-into-crowns" target="_blank"><i class="fa-solid fa-cube"></i> CurseForge</a>
+            <a class="btn support-btn" href="https://link-center.net/3912568/OZMgZm3yNlgG" target="_blank"><i class="fa-solid fa-link"></i> Linkvertise</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid-section" id="texture-packs-section">
+    <h2 class="section-title">Texture Packs</h2>
+    <div class="grid">
+      <div class="pack" data-name="blue cobweb" data-category="Texture Pack" data-downloads="899">
+        <div class="banner"><img src="https://i.postimg.cc/J7FcqQLY/Blue_Cobweb_resized.webp" alt="Pack Banner" loading="lazy" decoding="async"></div>
+        <div class="content">
+          <span class="tag">Texture Pack</span>
+          <h3>Blue Cobweb</h3>
+          <p class="dl-count">0.9k DLs</p>
+          <div class="btn-group">
+            <a class="btn curseforge-btn" href="https://www.curseforge.com/minecraft-bedrock/texture-packs/blue-cobweb-for-better-visibility" target="_blank"><i class="fa-solid fa-cube"></i> CurseForge</a>
+            <a class="btn support-btn" href="https://link-target.net/3912568/eJPqThh9dDzQ" target="_blank"><i class="fa-solid fa-link"></i> Linkvertise</a>
+          </div>
+        </div>
+      </div>
+      <div class="pack" data-name="no lava and underwater fog" data-category="Texture Pack" data-downloads="898">
+        <div class="banner"><img src="https://i.postimg.cc/MTh3p9Rj/No_Lava_And_Underwater_Fog_resized.webp" alt="Pack Banner" loading="lazy" decoding="async"></div>
+        <div class="content">
+          <span class="tag">Texture Pack</span>
+          <h3>No Lava & Underwater Fog</h3>
+          <p class="dl-count">0.9k DLs</p>
+          <div class="btn-group">
+            <a class="btn curseforge-btn" href="https://www.curseforge.com/minecraft-bedrock/texture-packs/no-lava-underwater-fog" target="_blank"><i class="fa-solid fa-cube"></i> CurseForge</a>
+            <a class="btn support-btn" href="https://direct-link.net/3912568/A9RQbKKC1llT" target="_blank"><i class="fa-solid fa-link"></i> Linkvertise</a>
+          </div>
+        </div>
+      </div>
+      <div class="pack" data-name="bow and crossbow indicators" data-category="Texture Pack" data-downloads="553">
+        <div class="banner"><img src="https://i.postimg.cc/9XktpBhn/Bow_And_Cross_Bow_With_Charging_Indicator_resized.webp" alt="Pack Banner" loading="lazy" decoding="async"></div>
+        <div class="content">
+          <span class="tag">Texture Pack</span>
+          <h3>Bow & Crossbow With Charging Indicator</h3>
+          <p class="dl-count">0.5k DLs</p>
+          <div class="btn-group">
+            <a class="btn curseforge-btn" href="https://www.curseforge.com/minecraft-bedrock/texture-packs/bow-crossbow-with-charging-indicator" target="_blank"><i class="fa-solid fa-cube"></i> CurseForge</a>
+            <a class="btn support-btn" href="https://link-target.net/3912568/GXy2ggILCaC0" target="_blank"><i class="fa-solid fa-link"></i> Linkvertise</a>
+          </div>
+        </div>
+      </div>
+      <div class="pack" data-name="small bow and crossbow indicator" data-category="Texture Pack" data-downloads="488">
+        <div class="banner"><img src="https://i.postimg.cc/KjCP8mf7/Small_Bow_And_Crossbow_With_Charging_Indicator_resized.webp" alt="Pack Banner" loading="lazy" decoding="async"></div>
+        <div class="content">
+          <span class="tag">Texture Pack</span>
+          <h3>Small Bow & Crossbow With Charging Indicator</h3>
+          <p class="dl-count">0.5k DLs</p>
+          <div class="btn-group">
+            <a class="btn curseforge-btn" href="https://www.curseforge.com/minecraft-bedrock/texture-packs/small-bow-crossbow-with-charging-indicator" target="_blank"><i class="fa-solid fa-cube"></i> CurseForge</a>
+            <a class="btn support-btn" href="https://link-hub.net/3912568/dlvXqgL2llM7" target="_blank"><i class="fa-solid fa-link"></i> Linkvertise</a>
+          </div>
+        </div>
+      </div>
+      <div class="pack" data-name="colorful cobwebs" data-category="Texture Pack" data-downloads="345">
+        <div class="banner"><img src="https://i.postimg.cc/y6GXPTHt/Colorful_Cobwebs_resized.jpg" alt="Pack Banner" loading="lazy" decoding="async"></div>
+        <div class="content">
+          <span class="tag">Texture Pack</span>
+          <h3>Colorful Cobwebs</h3>
+          <p class="dl-count">0.3k DLs</p>
+          <div class="btn-group">
+            <a class="btn curseforge-btn" href="https://www.curseforge.com/minecraft-bedrock/texture-packs/colorful-cobwebs" target="_blank"><i class="fa-solid fa-cube"></i> CurseForge</a>
+            <a class="btn support-btn" href="https://link-hub.net/3912568/VbDWDVBnNlr0" target="_blank"><i class="fa-solid fa-link"></i> Linkvertise</a>
+          </div>
+        </div>
+      </div>
+      <div class="pack" data-name="obvious outlined ore" data-category="Texture Pack" data-downloads="327">
+        <div class="banner"><img src="https://i.postimg.cc/yx2m87j3/Obvious_Outlined_Ores_resized.webp" alt="Pack Banner" loading="lazy" decoding="async"></div>
+        <div class="content">
+          <span class="tag">Texture Pack</span>
+          <h3>Obvious Outlined Ore</h3>
+          <p class="dl-count">0.3k DLs</p>
+          <div class="btn-group">
+            <a class="btn curseforge-btn" href="https://www.curseforge.com/minecraft-bedrock/texture-packs/obvious-outlined-ore" target="_blank"><i class="fa-solid fa-cube"></i> CurseForge</a>
+            <a class="btn support-btn" href="https://direct-link.net/3912568/pdtWeUiucjg8" target="_blank"><i class="fa-solid fa-link"></i> Linkvertise</a>
+          </div>
+        </div>
+      </div>
+      <div class="pack" data-name="no spyglass overlay" data-category="Texture Pack" data-downloads="247">
+        <div class="banner"><img src="https://i.postimg.cc/zv4CGq7b/No_Spyglass_Overlay_resized.webp" alt="Pack Banner" loading="lazy" decoding="async"></div>
+        <div class="content">
+          <span class="tag">Texture Pack</span>
+          <h3>No Spyglass Overlay</h3>
+          <p class="dl-count">0.3k DLs</p>
+          <div class="btn-group">
+            <a class="btn curseforge-btn" href="https://www.curseforge.com/minecraft-bedrock/texture-packs/no-spyglass-overlay" target="_blank"><i class="fa-solid fa-cube"></i> CurseForge</a>
+            <a class="btn support-btn" href="https://link-target.net/3912568/7UENsmvKXY7X" target="_blank"><i class="fa-solid fa-link"></i> Linkvertise</a>
+          </div>
+        </div>
+      </div>
+      <div class="pack" data-name="smoother bedrock texture" data-category="Texture Pack" data-downloads="225">
+        <div class="banner"><img src="https://i.postimg.cc/90sdQcbt/Smoother_Bedrock_resized.webp" alt="Pack Banner" loading="lazy" decoding="async"></div>
+        <div class="content">
+          <span class="tag">Texture Pack</span>
+          <h3>Smoother Bedrock - 32x, 64x & 128x</h3>
+          <p class="dl-count">0.2k DLs</p>
+          <div class="btn-group">
+            <a class="btn curseforge-btn" href="https://www.curseforge.com/minecraft-bedrock/texture-packs/smoother-bedrock-texture-extension-16x128x" target="_blank"><i class="fa-solid fa-cube"></i> CurseForge</a>
+            <a class="btn support-btn" href="https://link-center.net/3912568/juZn3X3XMtuD" target="_blank"><i class="fa-solid fa-link"></i> Linkvertise</a>
+          </div>
+        </div>
+      </div>
+      <div class="pack" data-name="clearer wither hearts" data-category="Texture Pack" data-downloads="154">
+        <div class="banner"><img src="https://i.postimg.cc/BZzcgC0z/Clearer_Wither_Hearts_resized.webp" alt="Pack Banner" loading="lazy" decoding="async"></div>
+        <div class="content">
+          <span class="tag">Texture Pack</span>
+          <h3>Clearer Wither Hearts</h3>
+          <p class="dl-count">0.1k DLs</p>
+          <div class="btn-group">
+            <a class="btn curseforge-btn" href="https://www.curseforge.com/minecraft-bedrock/texture-packs/clearer-wither-hearts" target="_blank"><i class="fa-solid fa-cube"></i> CurseForge</a>
+            <a class="btn support-btn" href="https://link-center.net/3912568/4yjPUhT7ktE9" target="_blank"><i class="fa-solid fa-link"></i> Linkvertise</a>
+          </div>
+        </div>
+      </div>
+      <div class="pack" data-name="cool golden apple" data-category="Texture Pack" data-downloads="151">
+        <div class="banner"><img src="https://i.postimg.cc/pr3fLPCV/Cool_Golden_Apple_resized.webp" alt="Pack Banner" loading="lazy" decoding="async"></div>
+        <div class="content">
+          <span class="tag">Texture Pack</span>
+          <h3>Cool Golden Apple</h3>
+          <p class="dl-count">0.1k DLs</p>
+          <div class="btn-group">
+            <a class="btn curseforge-btn" href="https://www.curseforge.com/minecraft-bedrock/texture-packs/cool-golden-apple" target="_blank"><i class="fa-solid fa-cube"></i> CurseForge</a>
+            <a class="btn support-btn" href="https://link-target.net/3912568/HEW2SY2d6SsF" target="_blank"><i class="fa-solid fa-link"></i> Linkvertise</a>
+          </div>
+        </div>
+      </div>
+      <div class="pack" data-name="outlined powder snow" data-category="Texture Pack" data-downloads="139">
+        <div class="banner"><img src="https://i.postimg.cc/C59Gxw7f/Outlined_Powder_Snow_resized.webp" alt="Pack Banner" loading="lazy" decoding="async"></div>
+        <div class="content">
+          <span class="tag">Texture Pack</span>
+          <h3>Outlined Powder Snow</h3>
+          <p class="dl-count">0.1k DLs</p>
+          <div class="btn-group">
+            <a class="btn curseforge-btn" href="https://www.curseforge.com/minecraft-bedrock/texture-packs/outlined-powder-snow" target="_blank"><i class="fa-solid fa-cube"></i> CurseForge</a>
+            <a class="btn support-btn" href="https://direct-link.net/3912568/gcyly5pir0d7" target="_blank"><i class="fa-solid fa-link"></i> Linkvertise</a>
+          </div>
+        </div>
+      </div>
+      <div class="pack" data-name="nether wart stage indicator" data-category="Texture Pack" data-downloads="124">
+        <div class="banner"><img src="https://i.postimg.cc/D0Rrw768/Netherwart_Stage_Indicator_resized.webp" alt="Pack Banner" loading="lazy" decoding="async"></div>
+        <div class="content">
+          <span class="tag">Texture Pack</span>
+          <h3>Nether Wart Stage Indicator</h3>
+          <p class="dl-count">0.1k DLs</p>
+          <div class="btn-group">
+            <a class="btn curseforge-btn" href="https://www.curseforge.com/minecraft-bedrock/texture-packs/nether-wart-stage-indicator" target="_blank"><i class="fa-solid fa-cube"></i> CurseForge</a>
+            <a class="btn support-btn" href="https://direct-link.net/3912568/gd6ryzLHSZbA" target="_blank"><i class="fa-solid fa-link"></i> Linkvertise</a>
+          </div>
+        </div>
+      </div>
+      <div class="pack" data-name="no rain and nether particles" data-category="Texture Pack" data-downloads="133">
+        <div class="banner"><img src="https://i.postimg.cc/NMCsTMWy/No_Rain_And_Nether_Particles_resized.webp" alt="Pack Banner" loading="lazy" decoding="async"></div>
+        <div class="content">
+          <span class="tag">Texture Pack</span>
+          <h3>No Rain & Nether Particles</h3>
+          <p class="dl-count">0.1k DLs</p>
+          <div class="btn-group">
+            <a class="btn curseforge-btn" href="https://www.curseforge.com/minecraft-bedrock/texture-packs/no-rain-nether-particles" target="_blank"><i class="fa-solid fa-cube"></i> CurseForge</a>
+            <a class="btn support-btn" href="https://link-target.net/3912568/jGagKAN9Mxta" target="_blank"><i class="fa-solid fa-link"></i> Linkvertise</a>
+          </div>
+        </div>
+      </div>
+      <div class="pack" data-name="suspicious sand and gravel detector" data-category="Texture Pack" data-downloads="94">
+        <div class="banner"><img src="https://i.postimg.cc/G3fJQjCM/Suspicious_Sand_Gravel_Detector_resized.webp" alt="Pack Banner" loading="lazy" decoding="async"></div>
+        <div class="content">
+          <span class="tag">Texture Pack</span>
+          <h3>Suspicious Sand & Gravel Detector</h3>
+          <p class="dl-count">0.1k DLs</p>
+          <div class="btn-group">
+            <a class="btn curseforge-btn" href="https://www.curseforge.com/minecraft-bedrock/texture-packs/suspicious-sand-gravel-detector" target="_blank"><i class="fa-solid fa-cube"></i> CurseForge</a>
+            <a class="btn support-btn" href="https://direct-link.net/3912568/9ITgdkgu3OuU" target="_blank"><i class="fa-solid fa-link"></i> Linkvertise</a>
+          </div>
+        </div>
+      </div>
+      <div class="pack" data-name="fermented spider eye into heart" data-category="Texture Pack" data-downloads="54">
+        <div class="banner"><img src="https://i.postimg.cc/Gt6FmbKm/Fermented_Spyder_Eye_Into_Heart_resized.webp" alt="Pack Banner" loading="lazy" decoding="async"></div>
+        <div class="content">
+          <span class="tag">Texture Pack</span>
+          <h3>Fermented Spider Eye Into Heart</h3>
+          <p class="dl-count">0.1k DLs</p>
+          <div class="btn-group">
+            <a class="btn curseforge-btn" href="https://www.curseforge.com/minecraft-bedrock/texture-packs/fermented-spider-into-heart" target="_blank"><i class="fa-solid fa-cube"></i> CurseForge</a>
+            <a class="btn support-btn" href="https://direct-link.net/3912568/EH0n1ch1bWnt" target="_blank"><i class="fa-solid fa-link"></i> Linkvertise</a>
+          </div>
+        </div>
+      </div>
+      <div class="pack" data-name="visible tripwire" data-category="Texture Pack" data-downloads="51">
+        <div class="banner"><img src="https://i.postimg.cc/G3fJQjC7/Visible_Tripwire_resized.webp" alt="Pack Banner" loading="lazy" decoding="async"></div>
+        <div class="content">
+          <span class="tag">Texture Pack</span>
+          <h3>Visible Tripwire</h3>
+          <p class="dl-count">0.1k DLs</p>
+          <div class="btn-group">
+            <a class="btn curseforge-btn" href="https://www.curseforge.com/minecraft-bedrock/texture-packs/visible-tripwire" target="_blank"><i class="fa-solid fa-cube"></i> CurseForge</a>
+            <a class="btn support-btn" href="https://direct-link.net/3912568/kVYhONlb4koK" target="_blank"><i class="fa-solid fa-link"></i> Linkvertise</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid-section" id="maps-section">
+    <h2 class="section-title">Maps</h2>
+    <div class="grid">
+      <div class="pack" data-name="ultimate texture pack testing world" data-category="Map" data-downloads="219">
+        <div class="banner"><img src="https://i.postimg.cc/rmdYTBdt/Ultimate_Resource_Pack_Testing_World_resized.webp" alt="Pack Banner" loading="lazy" decoding="async"></div>
+        <div class="content">
+          <span class="tag">Map</span>
+          <h3>Ultimate Texture Pack Testing World</h3>
+          <p class="dl-count">0.2k DLs</p>
+          <div class="btn-group">
+            <a class="btn curseforge-btn" href="https://www.curseforge.com/minecraft-bedrock/maps/ultimate-texture-pack-testing-world-by-legendwar" target="_blank"><i class="fa-solid fa-cube"></i> CurseForge</a>
+            <a class="btn support-btn" href="https://link-hub.net/3912568/HssKAsLwpfph" target="_blank"><i class="fa-solid fa-link"></i> Linkvertise</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<footer class="footer">
+  <div class="footer-container">
+    <div class="footer-brand">
+      <h3>Legend War</h3>
+      <p>Minecraft Bedrock Creator · UI & Texture Packs</p>
+    </div>
+    <div class="footer-links">
+      <a href="https://youtube.com/@legendwar005" target="_blank"><i class="fa-brands fa-youtube"></i> YouTube</a>
+      <a href="https://www.curseforge.com/members/legendwar/projects" target="_blank"><i class="fa-solid fa-cube"></i> CurseForge</a>
+      <a href="https://discord.gg/tDSEWyEkDP" target="_blank"><i class="fa-brands fa-discord"></i> Discord</a>
+    </div>
+  </div>
+  <div class="footer-bottom">© 2026 Legend War. All rights reserved.</div>
+</footer>
+
+<button id="topBtn"><i class="fa-solid fa-chevron-up"></i></button>
+
+<script>
+  const searchInput = document.getElementById('searchInput');
+  const catBtns = document.querySelectorAll('.cat-btn');
+  const sections = document.querySelectorAll('.grid-section');
+  const filterIcon = document.getElementById('filterIcon');
+  const filterPopup = document.getElementById('filterPopup');
+  const topBtn = document.getElementById('topBtn');
+
+  function update() {
+    const q = searchInput.value.toLowerCase().trim();
+    const active = document.querySelector('.cat-btn.active').dataset.filter;
+    sections.forEach(s => {
+      let visible = 0;
+      s.querySelectorAll('.pack').forEach(p => {
+        const matchQ = p.dataset.name.toLowerCase().includes(q);
+        const matchC = active === 'all' || p.dataset.category === active || (active === 'New Arrival' && s.id === 'new-arrivals-section');
+        if(matchQ && matchC) { p.style.display = 'flex'; visible++; }
+        else { p.style.display = 'none'; }
+      });
+      s.style.display = visible > 0 ? 'block' : 'none';
+    });
+  }
+
+  catBtns.forEach(btn => {
+    btn.onclick = () => {
+      catBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      update();
+      window.scrollTo({top:0, behavior:'smooth'});
+    };
+  });
+
+  searchInput.oninput = update;
+  filterIcon.onclick = (e) => { e.stopPropagation(); filterPopup.style.display = filterPopup.style.display==='block'?'none':'block'; };
+  document.onclick = () => filterPopup.style.display = 'none';
+
+  filterPopup.querySelectorAll('div').forEach(opt => {
+    opt.onclick = () => {
+      const mode = opt.dataset.sort;
+      sections.forEach(s => {
+        const grid = s.querySelector('.grid');
+        const items = Array.from(grid.querySelectorAll('.pack'));
+        items.sort((a,b) => mode==='high-low' ? b.dataset.downloads - a.dataset.downloads : a.dataset.downloads - b.dataset.downloads);
+        grid.innerHTML = '';
+        items.forEach(i => grid.appendChild(i));
+      });
+      update();
+    };
+  });
+
+  window.onscroll = () => topBtn.style.display = window.scrollY > 400 ? 'block' : 'none';
+  topBtn.onclick = () => window.scrollTo({top:0, behavior:'smooth'});
+</script>
+        </body>
+</html>                     
